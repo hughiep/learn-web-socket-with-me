@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      table {
+        tr {
+          border: 1px solid #ccc;
+        }
+
+        .label-danger {
+          background-color: red;
+        }
+
+        .label-success {
+          background-color: green;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="vertical-center">
+      <div class="container">
+        <h1>Stock Chart over WebSocket</h1>
+        <button onclick="connect()">Connect</button>
+        <table class="table" id="stockTable">
+          <thead>
+            <tr>
+              <th>Symbol</th>
+              <th>Price</th>
+            </tr>
+          </thead>
+          <tbody id="stockRows">
+            <tr>
+              <td><h3>AAPL</h3></td>
+              <td id="AAPL">
+                <h3><span class="label label-default">95.00</span></h3>
+              </td>
+            </tr>
+            <tr>
+              <td><h3>MSFT</h3></td>
+              <td id="MSFT">
+                <h3><span class="label label-default">50.00</span></h3>
+              </td>
+              Stock Example UI | 11 www.it-ebooks.info
+            </tr>
+            <tr>
+              <td><h3>AMZN</h3></td>
+              <td id="AMZN">
+                <h3><span class="label label-default">300.00</span></h3>
+              </td>
+            </tr>
+            <tr>
+              <td><h3>GOOG</h3></td>
+              <td id="GOOG">
+                <h3><span class="label label-default">550.00</span></h3>
+              </td>
+            </tr>
+            <tr>
+              <td><h3>YHOO</h3></td>
+              <td id="YHOO">
+                <h3><span class="label label-default">35.00</span></h3>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script>
+      const stock_request = {
+        stocks: ["AAPL", "MSFT", "AMZN", "GOOG", "YHOO"],
+      };
+
+      const stocks = stock_request["stocks"];
+
+      const ws = new WebSocket("ws://localhost:8080");
+
+      function connect() {}
+
+      ws.onopen = () => {
+        console.log("Connected", ws);
+        ws.send(JSON.stringify(stock_request));
+      };
+
+      // UI update function
+      var changeStockEntry = function (symbol, originalValue, newValue) {
+        var valElem = $("#" + symbol + " span");
+        valElem.html(newValue.toFixed(2));
+        if (newValue < originalValue) {
+          valElem.addClass("label-danger");
+          valElem.removeClass("label-success");
+        } else if (newValue > originalValue) {
+          valElem.addClass("label-success");
+          valElem.removeClass("label-danger");
+        }
+      };
+
+      // WebSocket message handler
+      ws.onmessage = function (e) {
+        var stocksData = JSON.parse(e.data);
+
+        for (var symbol in stocksData) {
+          if (stocksData.hasOwnProperty(symbol)) {
+            changeStockEntry(symbol, stocks[symbol], stocksData[symbol]);
+            stocks[symbol] = stocksData[symbol];
+          }
+        }
+      };
+
+      function handleErrors(e) {
+        console.log("Error", e);
+      }
+
+      ws.onerror = function (e) {
+        console.log("WebSocket failure, error", e);
+        handleErrors(e);
+      };
+
+      ws.onclose = function (e) {
+        console.log(e.reason + " " + e.code);
+        for (var symbol in stocks) {
+          if (stocks.hasOwnProperty(symbol)) {
+            stocks[symbol] = 0;
+          }
+        }
+      };
+    </script>
+  </body>
+</html>
