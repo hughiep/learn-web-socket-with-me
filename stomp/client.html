@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>STOMP</title>
+  </head>
+  <body>
+    <script>
+      var ws;
+      var connect = function () {
+        if (!ws || ws.readyState !== 1) {
+          ws = new WebSocket("ws://localhost:8181", "v12.stomp");
+          ws.addEventListener("message", onMessageHandler);
+          ws.addEventListener("open", onOpenHandler);
+          ws.addEventListener("close", onCloseHandler);
+        }
+      };
+      connect();
+    </script>
+  </body>
+</html>
